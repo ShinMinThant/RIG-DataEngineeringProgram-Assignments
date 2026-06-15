@@ -1,6 +1,10 @@
+<p align="center">
+  <img src="rig-logo.png" width="200"/>
+</p>
+
 # 🚀 RIG Data Engineering Program
 
- “Turning data into insights, and ideas into real-world solutions.”
+> “Turning data into insights, and ideas into real-world solutions.”
 
 Welcome to my **Data Engineering Learning Portfolio**.
 This repository documents my structured journey from foundational database concepts to advanced data engineering and analytics.
