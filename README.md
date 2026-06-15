@@ -1,6 +1,3 @@
-<p align="center">
-  <img src="rig-logo.png" width="200"/>
-</p>
 
 # 🚀 RIG Data Engineering Program
 
