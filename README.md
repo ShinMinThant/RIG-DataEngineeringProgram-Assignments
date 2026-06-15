@@ -1,4 +1,4 @@
-# 🚀 RIG Data Engineering Assignments
+# 🚀 RIG Data Engineering Program
 
  “Turning data into insights, and ideas into real-world solutions.”
 
