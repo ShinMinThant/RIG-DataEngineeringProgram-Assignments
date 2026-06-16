@@ -19,6 +19,16 @@ This repository is designed to:
 
 ---
 
+## 📅 Program Structure
+
+* Each level: 3 months duration
+* Study schedule: 2 days per week
+* Total learning days per level: ~24 days
+* Total duration: 9 months of structured learning and practical assignments.
+* Learning method: structured lessons + assignments
+
+---
+
 ## 🧭 Learning Roadmap
 
 ### 🟢 Level 1 — Database Foundations
