@@ -1,5 +1,5 @@
 
 DataBase Testing
--Structural Testing
--Functional Testing
--NonFunctional Testing
+* Structural Testing
+* Functional Testing
+* NonFunctional Testing
