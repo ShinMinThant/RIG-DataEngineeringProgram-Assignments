@@ -1,0 +1,4 @@
+customer_id,customer_name,phone,email,city
+1,"Aung Aung",0911111111,aung@example.com,Yangon
+2,"Su Su",0922222222,su@example.com,Mandalay
+3,"Kyaw Kyaw",0933333333,kyaw@example.com,Naypyidaw

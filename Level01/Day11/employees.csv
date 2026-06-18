@@ -1,0 +1,4 @@
+employee_id,employee_name,email,phone,department_id,salary,hire_date
+1,"Mg Mg",mgmg@example.com,0944444444,1,800000.00,2025-01-15
+2,"Hla Hla",hlahla@example.com,0955555555,2,750000.00,2025-03-10
+3,"Mya Mya",myamya@example.com,0966666666,3,650000.00,2025-06-20

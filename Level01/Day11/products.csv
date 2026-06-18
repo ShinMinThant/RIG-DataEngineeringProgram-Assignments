@@ -1,0 +1,4 @@
+product_id,product_name,category,unit_price
+1,Laptop,Electronics,1200000.00
+2,Mouse,Electronics,25000.00
+3,"Office Chair",Furniture,180000.00
