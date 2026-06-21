@@ -1,4 +1,4 @@
-Oracle Test
+Oracle Tests
 
 * Index
 * Synonym
