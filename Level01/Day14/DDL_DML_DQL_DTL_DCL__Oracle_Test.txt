@@ -1,0 +1,507 @@
+/* =========================================================
+   ORACLE HR DATABASE LAB SCRIPT
+   Topics: DDL, DML, DQL, DTL/TCL, DCL
+   ========================================================= */
+
+You should stay in the PDB (XEPDB1) when creating tables
+SHOW CON_NAME;
+If show : CDB$ROOT 
+Switch to the PDB: ALTER SESSION SET CONTAINER = XEPDB1;
+
+/* =========================================================
+   SECTION 1: DDL - DATA DEFINITION LANGUAGE
+   Create HR tables
+   ========================================================= */
+
+DESC departments;
+DROP TABLE departments CASCADE CONSTRAINTS;
+
+CREATE TABLE departments (
+    department_id NUMBER PRIMARY KEY,
+    department_name VARCHAR2(100) NOT NULL,
+    location VARCHAR2(100)
+);
+
+
+DESC jobs;
+DROP TABLE jobs CASCADE CONSTRAINTS;
+
+CREATE TABLE jobs (
+    job_id NUMBER PRIMARY KEY,
+    job_title VARCHAR2(100) NOT NULL,
+    min_salary NUMBER(10,2),
+    max_salary NUMBER(10,2)
+);
+
+
+DESC employees;
+DROP TABLE employees CASCADE CONSTRAINTS;
+
+CREATE TABLE employees (
+    employee_id NUMBER PRIMARY KEY,
+    first_name VARCHAR2(50) NOT NULL,
+    last_name VARCHAR2(50) NOT NULL,
+    email VARCHAR2(100) UNIQUE,
+    phone VARCHAR2(30),
+    hire_date DATE DEFAULT SYSDATE,
+    salary NUMBER(10,2) CHECK (salary > 0),
+    department_id NUMBER,
+    job_id NUMBER,
+    manager_id NUMBER,
+    CONSTRAINT fk_emp_dept
+        FOREIGN KEY (department_id)
+        REFERENCES departments(department_id),
+    CONSTRAINT fk_emp_job
+        FOREIGN KEY (job_id)
+        REFERENCES jobs(job_id),
+    CONSTRAINT fk_emp_manager
+        FOREIGN KEY (manager_id)
+        REFERENCES employees(employee_id)
+);
+
+
+
+DESC attendance;
+DROP TABLE attendance CASCADE CONSTRAINTS;
+
+CREATE TABLE attendance (
+    attendance_id NUMBER PRIMARY KEY,
+    employee_id NUMBER NOT NULL,
+    attendance_date DATE DEFAULT SYSDATE,
+    check_in TIMESTAMP,
+    check_out TIMESTAMP,
+    status VARCHAR2(20) CHECK (status IN ('Present', 'Absent', 'Leave', 'Late')),
+    CONSTRAINT fk_att_emp
+        FOREIGN KEY (employee_id)
+        REFERENCES employees(employee_id)
+);
+
+
+DESC payroll;
+
+CREATE TABLE payroll (
+    payroll_id NUMBER PRIMARY KEY,
+    employee_id NUMBER NOT NULL,
+    salary_month VARCHAR2(20),
+    basic_salary NUMBER(10,2),
+    allowance NUMBER(10,2),
+    deduction NUMBER(10,2),
+    net_salary NUMBER(10,2),
+    CONSTRAINT fk_payroll_emp
+        FOREIGN KEY (employee_id)
+        REFERENCES employees(employee_id)
+);
+
+
+/* Create sequences */
+
+CREATE SEQUENCE seq_department START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_job START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_employee START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_attendance START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_payroll START WITH 1 INCREMENT BY 1;
+
+
+/* Create indexes */
+
+CREATE INDEX idx_emp_department ON employees(department_id);
+CREATE INDEX idx_emp_job ON employees(job_id);
+CREATE INDEX idx_attendance_date ON attendance(attendance_date);
+
+
+/* Add one column */
+
+ALTER TABLE employees
+ADD employment_status VARCHAR2(20) DEFAULT 'Active';
+
+
+/* =========================================================
+   SECTION 2: DML - DATA MANIPULATION LANGUAGE
+   Insert, Update, Delete
+   ========================================================= */
+
+/* Insert departments */
+
+INSERT INTO departments VALUES
+(seq_department.NEXTVAL, 'Human Resources', 'Yangon');
+
+INSERT INTO departments VALUES
+(seq_department.NEXTVAL, 'Finance', 'Mandalay');
+
+INSERT INTO departments VALUES
+(seq_department.NEXTVAL, 'IT', 'Naypyidaw');
+
+INSERT INTO departments VALUES
+(seq_department.NEXTVAL, 'Sales', 'Yangon');
+
+
+/* Insert jobs */
+
+INSERT INTO jobs VALUES
+(seq_job.NEXTVAL, 'HR Officer', 400000, 900000);
+
+INSERT INTO jobs VALUES
+(seq_job.NEXTVAL, 'Accountant', 500000, 1200000);
+
+INSERT INTO jobs VALUES
+(seq_job.NEXTVAL, 'Software Engineer', 700000, 2000000);
+
+INSERT INTO jobs VALUES
+(seq_job.NEXTVAL, 'Sales Executive', 400000, 1500000);
+
+INSERT INTO jobs VALUES
+(seq_job.NEXTVAL, 'IT Manager', 1500000, 3500000);
+
+
+/* Insert employees */
+
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone,
+    hire_date, salary, department_id, job_id, manager_id
+)
+VALUES (
+    seq_employee.NEXTVAL, 'Aung', 'Aung', 'aung.aung@company.com',
+    '09111111111', DATE '2022-01-10', 2500000, 3, 5, NULL
+);
+
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone,
+    hire_date, salary, department_id, job_id, manager_id
+)
+VALUES (
+    seq_employee.NEXTVAL, 'Su', 'Su', 'su.su@company.com',
+    '09222222222', DATE '2023-03-15', 800000, 1, 1, 1
+);
+
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone,
+    hire_date, salary, department_id, job_id, manager_id
+)
+VALUES (
+    seq_employee.NEXTVAL, 'Kyaw', 'Kyaw', 'kyaw.kyaw@company.com',
+    '09333333333', DATE '2023-06-20', 950000, 2, 2, 1
+);
+
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone,
+    hire_date, salary, department_id, job_id, manager_id
+)
+VALUES (
+    seq_employee.NEXTVAL, 'Hla', 'Hla', 'hla.hla@company.com',
+    '09444444444', DATE '2024-02-01', 1200000, 3, 3, 1
+);
+
+INSERT INTO employees (
+    employee_id, first_name, last_name, email, phone,
+    hire_date, salary, department_id, job_id, manager_id
+)
+VALUES (
+    seq_employee.NEXTVAL, 'Mya', 'Mya', 'mya.mya@company.com',
+    '09555555555', DATE '2024-05-05', 700000, 4, 4, 1
+);
+
+
+/* Insert attendance */
+
+INSERT INTO attendance VALUES
+(seq_attendance.NEXTVAL, 1, DATE '2026-05-01',
+ TIMESTAMP '2026-05-01 08:55:00',
+ TIMESTAMP '2026-05-01 17:30:00',
+ 'Present');
+
+INSERT INTO attendance VALUES
+(seq_attendance.NEXTVAL, 2, DATE '2026-05-01',
+ TIMESTAMP '2026-05-01 09:20:00',
+ TIMESTAMP '2026-05-01 17:00:00',
+ 'Late');
+
+INSERT INTO attendance VALUES
+(seq_attendance.NEXTVAL, 3, DATE '2026-05-01',
+ TIMESTAMP '2026-05-01 08:50:00',
+ TIMESTAMP '2026-05-01 17:10:00',
+ 'Present');
+
+INSERT INTO attendance VALUES
+(seq_attendance.NEXTVAL, 4, DATE '2026-05-01',
+ NULL,
+ NULL,
+ 'Leave');
+
+INSERT INTO attendance VALUES
+(seq_attendance.NEXTVAL, 5, DATE '2026-05-01',
+ TIMESTAMP '2026-05-01 09:00:00',
+ TIMESTAMP '2026-05-01 17:00:00',
+ 'Present');
+
+
+/* Insert payroll */
+
+INSERT INTO payroll VALUES
+(seq_payroll.NEXTVAL, 1, 'May-2026', 2500000, 300000, 100000, 2700000);
+
+INSERT INTO payroll VALUES
+(seq_payroll.NEXTVAL, 2, 'May-2026', 800000, 100000, 30000, 870000);
+
+INSERT INTO payroll VALUES
+(seq_payroll.NEXTVAL, 3, 'May-2026', 950000, 150000, 50000, 1050000);
+
+INSERT INTO payroll VALUES
+(seq_payroll.NEXTVAL, 4, 'May-2026', 1200000, 200000, 80000, 1320000);
+
+INSERT INTO payroll VALUES
+(seq_payroll.NEXTVAL, 5, 'May-2026', 700000, 80000, 20000, 760000);
+
+
+SELECT employee_ID, salary, department_id from employees
+WHERE department_id = 3;
+
+
+
+/* Update employee salary */
+
+UPDATE employees
+SET salary = salary + 100000
+WHERE department_id = 3;
+
+
+/* Delete inactive attendance example */
+
+SELECT attendance_id, employee_id, status FROM attendance;
+
+DELETE FROM attendance
+WHERE status = 'Late';
+
+
+COMMIT;
+
+
+/* =========================================================
+   SECTION 3: DQL - DATA QUERY LANGUAGE
+   SELECT queries
+   ========================================================= */
+
+/* 1. View all employees */
+
+SELECT *
+FROM employees;
+
+
+/* 2. Employee with department and job */
+
+SELECT 
+    e.employee_id,
+    e.first_name || ' ' || e.last_name AS employee_name,
+    d.department_name,
+    j.job_title,
+    e.salary
+FROM employees e
+JOIN departments d
+    ON e.department_id = d.department_id
+JOIN jobs j
+    ON e.job_id = j.job_id;
+
+
+/* 3. Employees with salary greater than 1,000,000 */
+
+SELECT employee_id, first_name, last_name, salary
+FROM employees
+WHERE salary > 1000000;
+
+
+/* 4. Count employees by department */
+
+SELECT 
+    d.department_name,
+    COUNT(e.employee_id) AS total_employees
+FROM departments d
+LEFT JOIN employees e
+    ON d.department_id = e.department_id
+GROUP BY d.department_name
+ORDER BY total_employees DESC;
+
+
+/* 5. Average salary by department */
+
+SELECT 
+    d.department_name,
+    AVG(e.salary) AS average_salary
+FROM employees e
+JOIN departments d
+    ON e.department_id = d.department_id
+GROUP BY d.department_name;
+
+
+/* 6. Highest salary employee */
+
+SELECT *
+FROM employees
+WHERE salary = (
+    SELECT MAX(salary)
+    FROM employees
+);
+
+
+/* 7. Employee manager report */
+
+SELECT 
+    e.first_name || ' ' || e.last_name AS employee_name,
+    m.first_name || ' ' || m.last_name AS manager_name
+FROM employees e
+LEFT JOIN employees m
+    ON e.manager_id = m.employee_id;
+
+
+/* 8. Attendance report */
+
+SELECT 
+    e.first_name || ' ' || e.last_name AS employee_name,
+    a.attendance_date,
+    a.check_in,
+    a.check_out,
+    a.status
+FROM attendance a
+JOIN employees e
+    ON a.employee_id = e.employee_id;
+
+
+/* 9. Payroll report */
+
+SELECT 
+    e.first_name || ' ' || e.last_name AS employee_name,
+    p.salary_month,
+    p.basic_salary,
+    p.allowance,
+    p.deduction,
+    p.net_salary
+FROM payroll p
+JOIN employees e
+    ON p.employee_id = e.employee_id;
+
+
+/* 10. Employees hired in 2024 */
+
+SELECT employee_id, first_name, last_name, hire_date
+FROM employees
+WHERE EXTRACT(YEAR FROM hire_date) = 2024;
+
+
+/* =========================================================
+   SECTION 4: DTL / TCL - TRANSACTION CONTROL LANGUAGE
+   COMMIT, ROLLBACK, SAVEPOINT
+   ========================================================= */
+
+/* Transaction example */
+
+SAVEPOINT before_salary_update;
+
+UPDATE employees
+SET salary = salary + 50000
+WHERE department_id = 1;
+
+/* Check updated data */
+SELECT employee_id, first_name, salary
+FROM employees
+WHERE department_id = 1;
+
+/* Rollback only to savepoint */
+ROLLBACK TO before_salary_update;
+
+/* Final commit */
+COMMIT;
+
+
+/* Another transaction example */
+
+SAVEPOINT before_delete;
+
+DELETE FROM payroll
+WHERE salary_month = 'May-2026'
+AND employee_id = 5;
+
+/* Cancel delete */
+ROLLBACK TO before_delete;
+
+COMMIT;
+
+
+/* =========================================================
+   SECTION 5: DCL - DATA CONTROL LANGUAGE
+   User, Grant, Revoke
+   Run by DBA/Admin user
+   ========================================================= */
+
+
+/* Create user */
+
+CREATE USER hr_report_user IDENTIFIED BY Report##123;
+
+
+/* Allow user to login */
+
+GRANT CREATE SESSION TO hr_report_user;
+
+
+/* Grant SELECT permission */
+
+GRANT SELECT ON departments TO hr_report_user;
+GRANT SELECT ON employees TO hr_report_user;
+GRANT SELECT ON jobs TO hr_report_user;
+GRANT SELECT ON attendance TO hr_report_user;
+GRANT SELECT ON payroll TO hr_report_user;
+
+
+/* Grant INSERT permission only on attendance */
+
+GRANT INSERT ON attendance TO hr_report_user;
+
+
+/* Revoke INSERT permission */
+
+REVOKE INSERT ON attendance FROM hr_report_user;
+
+
+/* Create role */
+
+CREATE ROLE hr_readonly_role;
+
+
+/* Grant permissions to role */
+
+GRANT SELECT ON departments TO hr_readonly_role;
+GRANT SELECT ON employees TO hr_readonly_role;
+GRANT SELECT ON jobs TO hr_readonly_role;
+GRANT SELECT ON attendance TO hr_readonly_role;
+GRANT SELECT ON payroll TO hr_readonly_role;
+
+
+/* Assign role to user */
+
+GRANT hr_readonly_role TO hr_report_user;
+
+
+/* Drop user example */
+
+-- DROP USER hr_report_user CASCADE;
+
+
+/* =========================================================
+   SECTION 6: CLEANUP SCRIPT
+   Use only if you want to delete all objects
+   ========================================================= */
+
+/*
+DROP TABLE payroll CASCADE CONSTRAINTS;
+DROP TABLE attendance CASCADE CONSTRAINTS;
+DROP TABLE employees CASCADE CONSTRAINTS;
+DROP TABLE jobs CASCADE CONSTRAINTS;
+DROP TABLE departments CASCADE CONSTRAINTS;
+
+DROP SEQUENCE seq_department;
+DROP SEQUENCE seq_job;
+DROP SEQUENCE seq_employee;
+DROP SEQUENCE seq_attendance;
+DROP SEQUENCE seq_payroll;
+
+DROP ROLE hr_readonly_role;
+DROP USER hr_report_user CASCADE;
+*/
