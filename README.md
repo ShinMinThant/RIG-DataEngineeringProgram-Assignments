@@ -1,5 +1,5 @@
 
-# 🚀 RIG Data Engineering Program
+# RIG Data Engineering Program
 
 > “Turning data into insights, and ideas into real-world solutions.”
 
@@ -8,7 +8,7 @@ This repository documents my structured journey from foundational database conce
 
 ---
 
-## 🌟 About This Project
+## About This Project
 
 This repository is designed to:
 
@@ -19,7 +19,7 @@ This repository is designed to:
 
 ---
 
-## 📅 Program Structure
+## Program Structure
 
 * Each level: 3 months duration
 * Study schedule: 2 days per week
@@ -29,9 +29,9 @@ This repository is designed to:
 
 ---
 
-## 🧭 Learning Roadmap
+## Learning Roadmap
 
-### 🟢 Level 1 — Database Foundations
+### Level 1 — Database Foundations
 
 Building strong core knowledge in databases and SQL.
 
@@ -49,7 +49,7 @@ Building strong core knowledge in databases and SQL.
 
 ---
 
-### 🟡 Level 2 — Data Processing & Engineering
+### Level 2 — Data Processing & Engineering
 
 Developing skills in data pipelines and programming.
 
@@ -60,7 +60,7 @@ Developing skills in data pipelines and programming.
 
 ---
 
-### 🔴 Level 3 — Advanced Data Engineering & Analytics
+### Level 3 — Advanced Data Engineering & Analytics
 
 Focusing on advanced data systems and visualization.
 
@@ -71,7 +71,7 @@ Focusing on advanced data systems and visualization.
 
 ---
 
-## 📈 My Goal
+## My Goal
 
 To become a skilled Data Engineer capable of:
 
@@ -82,7 +82,7 @@ To become a skilled Data Engineer capable of:
 
 ---
 
-## 💡 Why This Repository Matters
+## Why This Repository Matters
 
 This is not just coursework — it is my:
 
@@ -93,10 +93,10 @@ This is not just coursework — it is my:
 
 ---
 
-## 🔥 Continuous Improvement
+## Continuous Improvement
 
 This repository will be updated daily as I complete new assignments and projects.
 
 ---
 
-⭐ *“Consistency is the key to mastery.”*
+ *“Consistency is the key to mastery.”*
