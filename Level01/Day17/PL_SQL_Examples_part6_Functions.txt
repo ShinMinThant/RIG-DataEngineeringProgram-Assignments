@@ -1,0 +1,388 @@
+/* =========================================================
+FUNCTIONS IN ORACLE PL/SQL
+
+   Topics:
+   - Function Syntax
+   - Return Data Types
+   - Calling Functions
+   - Functions in SQL Statements
+   - Deterministic Functions
+
+   Labs:
+   - Grade Function
+   - Tax Calculation Function
+   - Customer Loyalty Function
+   ========================================================= */
+
+SET SERVEROUTPUT ON SIZE UNLIMITED;
+
+/* =========================================================
+   1. DROP OLD TABLES
+   ========================================================= */
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE students';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE employees';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE customers';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+/* =========================================================
+   2. CREATE TABLES
+   ========================================================= */
+
+CREATE TABLE students
+(
+    student_id   NUMBER PRIMARY KEY,
+    student_name VARCHAR2(100),
+    mark         NUMBER
+);
+
+CREATE TABLE employees
+(
+    employee_id   NUMBER PRIMARY KEY,
+    employee_name VARCHAR2(100),
+    salary        NUMBER,
+    department    VARCHAR2(50)
+);
+
+CREATE TABLE customers
+(
+    customer_id     NUMBER PRIMARY KEY,
+    customer_name   VARCHAR2(100),
+    total_purchase  NUMBER,
+    status          VARCHAR2(20)
+);
+
+/* =========================================================
+   3. INSERT SAMPLE DATA
+   ========================================================= */
+
+INSERT INTO students VALUES (1, 'Aung Aung', 85);
+INSERT INTO students VALUES (2, 'Mg Mg', 72);
+INSERT INTO students VALUES (3, 'Su Su', 55);
+INSERT INTO students VALUES (4, 'Hla Hla', 35);
+
+INSERT INTO employees VALUES (1, 'Kyaw Kyaw', 900000, 'IT');
+INSERT INTO employees VALUES (2, 'Thida', 1500000, 'Finance');
+INSERT INTO employees VALUES (3, 'Mya Mya', 500000, 'HR');
+
+INSERT INTO customers VALUES (1, 'ABC Trading', 5000000, 'ACTIVE');
+INSERT INTO customers VALUES (2, 'Global Tech', 2000000, 'ACTIVE');
+INSERT INTO customers VALUES (3, 'Myanmar Retail', 500000, 'ACTIVE');
+
+COMMIT;
+
+/* =========================================================
+   4. FUNCTION SYNTAX
+
+   Basic syntax:
+
+   CREATE OR REPLACE FUNCTION function_name
+   (
+       parameter_name IN data_type
+   )
+   RETURN return_data_type
+   AS
+       local_variable data_type;
+   BEGIN
+       statements;
+       RETURN value;
+   EXCEPTION
+       exception_handling;
+   END;
+   /
+   ========================================================= */
+
+/* =========================================================
+   5. SIMPLE FUNCTION RETURNING VARCHAR2
+   ========================================================= */
+
+CREATE OR REPLACE FUNCTION get_welcome_message
+RETURN VARCHAR2
+AS
+BEGIN
+    RETURN 'Welcome to Oracle PL/SQL Functions';
+END;
+/
+
+/* Calling function from PL/SQL block */
+BEGIN
+    DBMS_OUTPUT.PUT_LINE(get_welcome_message);
+END;
+/
+
+/* Calling function from SQL statement */
+SELECT get_welcome_message AS message FROM dual;
+
+/* =========================================================
+   6. FUNCTION RETURNING NUMBER
+   ========================================================= */
+
+CREATE OR REPLACE FUNCTION add_two_numbers
+(
+    p_num1 IN NUMBER,
+    p_num2 IN NUMBER
+)
+RETURN NUMBER
+AS
+    v_result NUMBER;
+BEGIN
+    v_result := p_num1 + p_num2;
+
+    RETURN v_result;
+END;
+/
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Result: ' || add_two_numbers(100, 200));
+END;
+/
+
+SELECT add_two_numbers(500, 300) AS total FROM dual;
+
+/* =========================================================
+   7. FUNCTION RETURNING DATE
+   ========================================================= */
+
+CREATE OR REPLACE FUNCTION get_today_date
+RETURN DATE
+AS
+BEGIN
+    RETURN SYSDATE;
+END;
+/
+
+SELECT get_today_date AS today_date FROM dual;
+
+/* =========================================================
+   8. FUNCTION WITH LOCAL VARIABLES
+   ========================================================= */
+
+CREATE OR REPLACE FUNCTION calculate_bonus
+(
+    p_salary IN NUMBER
+)
+RETURN NUMBER
+AS
+    v_bonus_rate NUMBER;
+    v_bonus      NUMBER;
+BEGIN
+    IF p_salary >= 1000000 THEN
+        v_bonus_rate := 0.15;
+    ELSE
+        v_bonus_rate := 0.10;
+    END IF;
+
+    v_bonus := p_salary * v_bonus_rate;
+
+    RETURN v_bonus;
+END;
+/
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Bonus: ' || calculate_bonus(1200000));
+END;
+/
+
+/* Function used inside SQL SELECT */
+SELECT
+    employee_id,
+    employee_name,
+    salary,
+    calculate_bonus(salary) AS bonus
+FROM employees;
+
+/* =========================================================
+   9. DETERMINISTIC FUNCTION
+
+   A deterministic function returns the same result
+   whenever the same input values are provided.
+
+   Example:
+   Tax calculation based only on salary.
+   ========================================================= */
+
+CREATE OR REPLACE FUNCTION calculate_fixed_tax
+(
+    p_salary IN NUMBER
+)
+RETURN NUMBER
+DETERMINISTIC
+AS
+BEGIN
+    RETURN p_salary * 0.05;
+END;
+/
+
+SELECT
+    employee_name,
+    salary,
+    calculate_fixed_tax(salary) AS fixed_tax
+FROM employees;
+
+/* =========================================================
+   LAB 1: GRADE FUNCTION
+
+   Requirement:
+   - 80 and above = A
+   - 60 to 79 = B
+   - 40 to 59 = C
+   - Below 40 = Fail
+   ========================================================= */
+
+CREATE OR REPLACE FUNCTION get_grade
+(
+    p_mark IN NUMBER
+)
+RETURN VARCHAR2
+AS
+    v_grade VARCHAR2(10);
+BEGIN
+    IF p_mark >= 80 THEN
+        v_grade := 'A';
+    ELSIF p_mark >= 60 THEN
+        v_grade := 'B';
+    ELSIF p_mark >= 40 THEN
+        v_grade := 'C';
+    ELSE
+        v_grade := 'Fail';
+    END IF;
+
+    RETURN v_grade;
+END;
+/
+
+/* Calling Grade Function */
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Grade: ' || get_grade(85));
+    DBMS_OUTPUT.PUT_LINE('Grade: ' || get_grade(55));
+END;
+/
+
+/* Grade Function in SQL Statement */
+SELECT
+    student_id,
+    student_name,
+    mark,
+    get_grade(mark) AS grade
+FROM students;
+
+/* =========================================================
+   LAB 2: TAX CALCULATION FUNCTION
+
+   Requirement:
+   - Salary >= 1,000,000 => Tax 10%
+   - Salary >= 500,000   => Tax 5%
+   - Salary below 500,000 => Tax 2%
+   ========================================================= */
+
+CREATE OR REPLACE FUNCTION calculate_tax
+(
+    p_salary IN NUMBER
+)
+RETURN NUMBER
+AS
+    v_tax_rate NUMBER;
+    v_tax      NUMBER;
+BEGIN
+    IF p_salary >= 1000000 THEN
+        v_tax_rate := 0.10;
+    ELSIF p_salary >= 500000 THEN
+        v_tax_rate := 0.05;
+    ELSE
+        v_tax_rate := 0.02;
+    END IF;
+
+    v_tax := p_salary * v_tax_rate;
+
+    RETURN v_tax;
+END;
+/
+
+/* Calling Tax Function */
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Tax Amount: ' || calculate_tax(1500000));
+    DBMS_OUTPUT.PUT_LINE('Tax Amount: ' || calculate_tax(700000));
+END;
+/
+
+/* Tax Function in SQL Statement */
+SELECT
+    employee_id,
+    employee_name,
+    salary,
+    calculate_tax(salary) AS tax_amount,
+    salary - calculate_tax(salary) AS net_salary
+FROM employees;
+
+/* =========================================================
+   LAB 3: CUSTOMER LOYALTY FUNCTION
+
+   Requirement:
+   - Purchase >= 5,000,000 => PLATINUM
+   - Purchase >= 2,000,000 => GOLD
+   - Purchase >= 1,000,000 => SILVER
+   - Below 1,000,000      => BASIC
+   ========================================================= */
+
+CREATE OR REPLACE FUNCTION get_customer_loyalty
+(
+    p_total_purchase IN NUMBER
+)
+RETURN VARCHAR2
+AS
+    v_loyalty_level VARCHAR2(20);
+BEGIN
+    IF p_total_purchase >= 5000000 THEN
+        v_loyalty_level := 'PLATINUM';
+    ELSIF p_total_purchase >= 2000000 THEN
+        v_loyalty_level := 'GOLD';
+    ELSIF p_total_purchase >= 1000000 THEN
+        v_loyalty_level := 'SILVER';
+    ELSE
+        v_loyalty_level := 'BASIC';
+    END IF;
+
+    RETURN v_loyalty_level;
+END;
+/
+
+/* Calling Customer Loyalty Function */
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Loyalty Level: ' || get_customer_loyalty(5000000));
+    DBMS_OUTPUT.PUT_LINE('Loyalty Level: ' || get_customer_loyalty(800000));
+END;
+/
+
+/* Customer Loyalty Function in SQL Statement */
+SELECT
+    customer_id,
+    customer_name,
+    total_purchase,
+    get_customer_loyalty(total_purchase) AS loyalty_level
+FROM customers;
+
+/* =========================================================
+   FINAL CHECKING
+   ========================================================= */
+
+SELECT * FROM students ORDER BY student_id;
+
+SELECT * FROM employees ORDER BY employee_id;
+
+SELECT * FROM customers ORDER BY customer_id;

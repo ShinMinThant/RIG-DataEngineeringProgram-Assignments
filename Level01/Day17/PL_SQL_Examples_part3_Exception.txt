@@ -1,0 +1,505 @@
+/* =========================================================
+ EXCEPTION HANDLING IN ORACLE PL/SQL
+
+   Topics:
+   1. Oracle Predefined Exceptions
+      - NO_DATA_FOUND
+      - TOO_MANY_ROWS
+      - ZERO_DIVIDE
+      - INVALID_NUMBER
+      - VALUE_ERROR
+
+   2. User Defined Exceptions
+      - Creating Custom Exceptions
+      - Raising Exceptions
+
+   3. Exception Functions
+      - SQLCODE
+      - SQLERRM
+
+   Labs:
+   - ATM Withdrawal Validation
+   - Product Stock Validation
+   - Error Logging Example
+   ========================================================= */
+
+SET SERVEROUTPUT ON SIZE UNLIMITED;
+
+/* =========================================================
+   1. DROP OLD TABLES
+   ========================================================= */
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE bank_accounts';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE products';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE error_logs';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
+/* =========================================================
+   2. CREATE TABLES
+   ========================================================= */
+
+CREATE TABLE bank_accounts
+(
+    account_id      NUMBER PRIMARY KEY,
+    account_name    VARCHAR2(100),
+    balance         NUMBER,
+    account_status  VARCHAR2(20)
+);
+
+CREATE TABLE products
+(
+    product_id      NUMBER PRIMARY KEY,
+    product_name    VARCHAR2(100),
+    stock_quantity  NUMBER,
+    unit_price      NUMBER
+);
+
+CREATE TABLE error_logs
+(
+    log_id          NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    error_date      DATE DEFAULT SYSDATE,
+    program_name    VARCHAR2(100),
+    error_code      NUMBER,
+    error_message   VARCHAR2(4000)
+);
+
+/* =========================================================
+   3. INSERT SAMPLE DATA
+   ========================================================= */
+
+INSERT INTO bank_accounts
+(account_id, account_name, balance, account_status)
+VALUES
+(1, 'Aung Aung', 1000000, 'ACTIVE');
+
+INSERT INTO bank_accounts
+(account_id, account_name, balance, account_status)
+VALUES
+(2, 'Mg Mg', 500000, 'ACTIVE');
+
+INSERT INTO bank_accounts
+(account_id, account_name, balance, account_status)
+VALUES
+(3, 'Su Su', 200000, 'BLOCKED');
+
+INSERT INTO products
+(product_id, product_name, stock_quantity, unit_price)
+VALUES
+(1, 'Laptop', 10, 1500000);
+
+INSERT INTO products
+(product_id, product_name, stock_quantity, unit_price)
+VALUES
+(2, 'Mouse', 50, 15000);
+
+INSERT INTO products
+(product_id, product_name, stock_quantity, unit_price)
+VALUES
+(3, 'Keyboard', 20, 30000);
+
+COMMIT;
+
+/* =========================================================
+   PART A: ORACLE PREDEFINED EXCEPTIONS
+   ========================================================= */
+
+/* =========================================================
+   4. NO_DATA_FOUND Example
+
+   This exception occurs when SELECT INTO returns no row.
+   ========================================================= */
+
+DECLARE
+    v_account_name bank_accounts.account_name%TYPE;
+BEGIN
+    SELECT account_name
+    INTO v_account_name
+    FROM bank_accounts
+    WHERE account_id = 999;
+
+    DBMS_OUTPUT.PUT_LINE('Account Name: ' || v_account_name);
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('NO_DATA_FOUND: No account found with this ID.');
+END;
+/
+
+/* =========================================================
+   5. TOO_MANY_ROWS Example
+
+   This exception occurs when SELECT INTO returns more than one row.
+   ========================================================= */
+
+DECLARE
+    v_account_name bank_accounts.account_name%TYPE;
+BEGIN
+    SELECT account_name
+    INTO v_account_name
+    FROM bank_accounts
+    WHERE account_status = 'ACTIVE';
+
+    DBMS_OUTPUT.PUT_LINE('Account Name: ' || v_account_name);
+
+EXCEPTION
+    WHEN TOO_MANY_ROWS THEN
+        DBMS_OUTPUT.PUT_LINE('TOO_MANY_ROWS: Query returned more than one row.');
+END;
+/
+
+/* =========================================================
+   6. ZERO_DIVIDE Example
+
+   This exception occurs when a number is divided by zero.
+   ========================================================= */
+
+DECLARE
+    v_total_amount NUMBER := 100000;
+    v_count        NUMBER := 0;
+    v_average      NUMBER;
+BEGIN
+    v_average := v_total_amount / v_count;
+
+    DBMS_OUTPUT.PUT_LINE('Average Amount: ' || v_average);
+
+EXCEPTION
+    WHEN ZERO_DIVIDE THEN
+        DBMS_OUTPUT.PUT_LINE('ZERO_DIVIDE: Cannot divide by zero.');
+END;
+/
+
+/* =========================================================
+   7. INVALID_NUMBER Example
+
+   This exception occurs when character data cannot be converted to number.
+   ========================================================= */
+
+DECLARE
+    v_text_number VARCHAR2(20) := 'ABC123';
+    v_number      NUMBER;
+BEGIN
+    v_number := TO_NUMBER(v_text_number);
+
+    DBMS_OUTPUT.PUT_LINE('Converted Number: ' || v_number);
+
+EXCEPTION
+    WHEN INVALID_NUMBER THEN
+        DBMS_OUTPUT.PUT_LINE('INVALID_NUMBER: Text cannot be converted to number.');
+END;
+/
+
+/* =========================================================
+   8. VALUE_ERROR Example
+
+   This exception occurs when value size or type is invalid.
+   Example: assigning long text into short variable.
+   ========================================================= */
+
+DECLARE
+    v_short_text VARCHAR2(5);
+BEGIN
+    v_short_text := 'ORACLE DATABASE';
+
+    DBMS_OUTPUT.PUT_LINE('Text: ' || v_short_text);
+
+EXCEPTION
+    WHEN VALUE_ERROR THEN
+        DBMS_OUTPUT.PUT_LINE('VALUE_ERROR: Value is too large for the variable.');
+END;
+/
+
+/* =========================================================
+   PART B: USER DEFINED EXCEPTIONS
+   ========================================================= */
+
+/* =========================================================
+   9. Creating and Raising Custom Exception
+
+   Requirement:
+   - If withdrawal amount is greater than balance,
+     raise custom exception.
+   ========================================================= */
+
+DECLARE
+    v_balance           NUMBER := 300000;
+    v_withdraw_amount   NUMBER := 500000;
+
+    e_insufficient_balance EXCEPTION;
+BEGIN
+    IF v_withdraw_amount > v_balance THEN
+        RAISE e_insufficient_balance;
+    END IF;
+
+    v_balance := v_balance - v_withdraw_amount;
+
+    DBMS_OUTPUT.PUT_LINE('Withdrawal successful.');
+    DBMS_OUTPUT.PUT_LINE('Remaining Balance: ' || v_balance);
+
+EXCEPTION
+    WHEN e_insufficient_balance THEN
+        DBMS_OUTPUT.PUT_LINE('Custom Exception: Insufficient balance.');
+END;
+/
+
+/* =========================================================
+   10. Custom Exception with Business Rule
+
+   Requirement:
+   - Account must be ACTIVE.
+   - If account is BLOCKED, raise exception.
+   ========================================================= */
+
+DECLARE
+    v_account_status bank_accounts.account_status%TYPE;
+
+    e_account_blocked EXCEPTION;
+BEGIN
+    SELECT account_status
+    INTO v_account_status
+    FROM bank_accounts
+    WHERE account_id = 3;
+
+    IF v_account_status = 'BLOCKED' THEN
+        RAISE e_account_blocked;
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE('Account is active. Transaction allowed.');
+
+EXCEPTION
+    WHEN e_account_blocked THEN
+        DBMS_OUTPUT.PUT_LINE('Custom Exception: Account is blocked.');
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Account not found.');
+END;
+/
+
+/* =========================================================
+   PART C: SQLCODE AND SQLERRM
+   ========================================================= */
+
+/* =========================================================
+   11. SQLCODE and SQLERRM Example
+
+   SQLCODE returns Oracle error number.
+   SQLERRM returns Oracle error message.
+   ========================================================= */
+
+DECLARE
+    v_number NUMBER;
+BEGIN
+    v_number := TO_NUMBER('ABC');
+
+    DBMS_OUTPUT.PUT_LINE('Number: ' || v_number);
+
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error Code: ' || SQLCODE);
+        DBMS_OUTPUT.PUT_LINE('Error Message: ' || SQLERRM);
+END;
+/
+
+/* =========================================================
+   12. Error Logging Example
+
+   Store error details into error_logs table.
+   ========================================================= */
+
+DECLARE
+    v_result NUMBER;
+BEGIN
+    v_result := 10 / 0;
+
+    DBMS_OUTPUT.PUT_LINE('Result: ' || v_result);
+
+EXCEPTION
+    WHEN OTHERS THEN
+        INSERT INTO error_logs
+        (
+            program_name,
+            error_code,
+            error_message
+        )
+        VALUES
+        (
+            'Error Logging Example',
+            SQLCODE,
+            SQLERRM
+        );
+
+        COMMIT;
+
+        DBMS_OUTPUT.PUT_LINE('Error saved into error_logs table.');
+END;
+/
+
+/* =========================================================
+   LAB 1: ATM Withdrawal Validation
+   ========================================================= */
+
+DECLARE
+    v_account_id        bank_accounts.account_id%TYPE := 1;
+    v_withdraw_amount   NUMBER := 300000;
+    v_balance           bank_accounts.balance%TYPE;
+    v_status            bank_accounts.account_status%TYPE;
+
+    e_insufficient_balance EXCEPTION;
+    e_account_blocked      EXCEPTION;
+    e_invalid_amount       EXCEPTION;
+BEGIN
+    SELECT balance, account_status
+    INTO v_balance, v_status
+    FROM bank_accounts
+    WHERE account_id = v_account_id;
+
+    IF v_withdraw_amount <= 0 THEN
+        RAISE e_invalid_amount;
+    END IF;
+
+    IF v_status <> 'ACTIVE' THEN
+        RAISE e_account_blocked;
+    END IF;
+
+    IF v_withdraw_amount > v_balance THEN
+        RAISE e_insufficient_balance;
+    END IF;
+
+    UPDATE bank_accounts
+    SET balance = balance - v_withdraw_amount
+    WHERE account_id = v_account_id;
+
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('ATM withdrawal successful.');
+    DBMS_OUTPUT.PUT_LINE('Withdraw Amount: ' || v_withdraw_amount);
+    DBMS_OUTPUT.PUT_LINE('Remaining Balance: ' || (v_balance - v_withdraw_amount));
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('ATM Error: Account not found.');
+
+    WHEN e_invalid_amount THEN
+        DBMS_OUTPUT.PUT_LINE('ATM Error: Withdraw amount must be greater than zero.');
+
+    WHEN e_account_blocked THEN
+        DBMS_OUTPUT.PUT_LINE('ATM Error: Account is blocked.');
+
+    WHEN e_insufficient_balance THEN
+        DBMS_OUTPUT.PUT_LINE('ATM Error: Insufficient balance.');
+
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Unexpected ATM Error: ' || SQLERRM);
+END;
+/
+
+/* =========================================================
+   LAB 2: Product Stock Validation
+   ========================================================= */
+
+DECLARE
+    v_product_id       products.product_id%TYPE := 1;
+    v_order_quantity   NUMBER := 3;
+    v_stock_quantity   products.stock_quantity%TYPE;
+
+    e_out_of_stock     EXCEPTION;
+    e_invalid_quantity EXCEPTION;
+BEGIN
+    SELECT stock_quantity
+    INTO v_stock_quantity
+    FROM products
+    WHERE product_id = v_product_id;
+
+    IF v_order_quantity <= 0 THEN
+        RAISE e_invalid_quantity;
+    END IF;
+
+    IF v_order_quantity > v_stock_quantity THEN
+        RAISE e_out_of_stock;
+    END IF;
+
+    UPDATE products
+    SET stock_quantity = stock_quantity - v_order_quantity
+    WHERE product_id = v_product_id;
+
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Product stock updated successfully.');
+    DBMS_OUTPUT.PUT_LINE('Order Quantity: ' || v_order_quantity);
+    DBMS_OUTPUT.PUT_LINE('Remaining Stock: ' || (v_stock_quantity - v_order_quantity));
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Stock Error: Product not found.');
+
+    WHEN e_invalid_quantity THEN
+        DBMS_OUTPUT.PUT_LINE('Stock Error: Order quantity must be greater than zero.');
+
+    WHEN e_out_of_stock THEN
+        DBMS_OUTPUT.PUT_LINE('Stock Error: Not enough stock.');
+
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Unexpected Stock Error: ' || SQLERRM);
+END;
+/
+
+/* =========================================================
+   LAB 3: Error Logging Example
+   ========================================================= */
+
+DECLARE
+    v_account_name bank_accounts.account_name%TYPE;
+BEGIN
+    SELECT account_name
+    INTO v_account_name
+    FROM bank_accounts
+    WHERE account_id = 9999;
+
+    DBMS_OUTPUT.PUT_LINE('Account Name: ' || v_account_name);
+
+EXCEPTION
+    WHEN OTHERS THEN
+        INSERT INTO error_logs
+        (
+            program_name,
+            error_code,
+            error_message
+        )
+        VALUES
+        (
+            'LAB 3: Error Logging Example',
+            SQLCODE,
+            SQLERRM
+        );
+
+        COMMIT;
+
+        DBMS_OUTPUT.PUT_LINE('Error occurred and saved into error_logs table.');
+        DBMS_OUTPUT.PUT_LINE('Error Code: ' || SQLCODE);
+        DBMS_OUTPUT.PUT_LINE('Error Message: ' || SQLERRM);
+END;
+/
+
+/* =========================================================
+   FINAL CHECKING
+   ========================================================= */
+
+SELECT * FROM bank_accounts ORDER BY account_id;
+
+SELECT * FROM products ORDER BY product_id;
+
+SELECT * FROM error_logs ORDER BY log_id;
