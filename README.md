@@ -12,10 +12,10 @@ This repository documents my structured journey from foundational database conce
 
 This repository is designed to:
 
-* 📚 Track my daily learning progress
-* 🛠 Build strong technical skills in Data Engineering
-* 📊 Showcase real assignments and practical work
-* 🎯 Prepare for internships, scholarships, and future career opportunities
+📚 Track my daily learning progress
+🛠 Build strong technical skills in Data Engineering
+📊 Showcase real assignments and practical work
+🎯 Prepare for internships, scholarships, and future career opportunities
 
 ---
 
